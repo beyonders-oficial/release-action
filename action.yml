@@ -1,23 +1,29 @@
-name: The name of your action here
-description: Provide a description here
-author: Your name or organization here
+name: Beyonders Release
+description:
+  Action to create a new Release and github and update all the details in Notion
+  accordingly.
+author: Beyonders Digital Solutions
 
 # Add your action's branding here. This will appear on the GitHub Marketplace.
 branding:
-  icon: heart
-  color: red
+  icon: aperture
+  color: green
 
 # Define your inputs here.
 inputs:
-  milliseconds:
-    description: Your input description here
+  project:
+    description: Name of the project
     required: true
-    default: '1000'
+    default: contractapp
+  repo-category:
+    description: Stack Category of the project (like Web, Backend, etc)
+    required: true
+    default: Web
 
 # Define your outputs here.
 outputs:
-  time:
-    description: Your output description here
+  new-version:
+    description: The new version of the project
 
 runs:
   using: node20

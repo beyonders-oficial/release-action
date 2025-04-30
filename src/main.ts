@@ -70,10 +70,11 @@ export async function run(): Promise<void> {
       changeLog: changelog
     })
 
-    await updateNotionPageVersion({
-      newVersion,
-      pageId: response.results[0].id
-    })
+    for (const page of response.results)
+      await updateNotionPageVersion({
+        newVersion,
+        pageId: page.id
+      })
 
     await publishGithubRelease(releaseId)
 

@@ -31281,7 +31281,7 @@ const createGithubRelease = async ({ changeLog, categories }) => {
     });
     const latestTag = latestRelease.data.tag_name;
     const nextTag = autoDetectNextVersion(latestTag, categories);
-    await octokit.rest.repos.createRelease({
+    const release = await octokit.rest.repos.createRelease({
         owner,
         repo: repoName,
         tag_name: nextTag,
@@ -31290,7 +31290,16 @@ const createGithubRelease = async ({ changeLog, categories }) => {
         draft: true,
         prerelease: false
     });
-    return nextTag;
+    return { newVersion: nextTag, releaseId: release.data.id };
+};
+const publishGithubRelease = async (releaseId) => {
+    const [owner, repoName] = (REPOSITORY_NAME || '').split('/');
+    await octokit.rest.repos.updateRelease({
+        owner,
+        repo: repoName,
+        release_id: releaseId,
+        draft: false
+    });
 };
 
 var src = {};
@@ -114151,6 +114160,34 @@ const getTasksReadyForRelease = async ({ databaseId, repoCategory }) => {
         }
     });
 };
+/**
+ * Updates the version and status of a Notion page.
+ *
+ * @param {UpdatePageVersionParams} params - The parameters for updating the page.
+ * @param {string} params.newVersion - The new version to set in the "Release" property of the page.
+ * @param {string} params.pageId - The ID of the Notion page to update.
+ * @returns {Promise<string>} A promise that resolves to the ID of the updated page.
+ *
+ * @throws {Error} Throws an error if the Notion API request fails.
+ */
+const updateNotionPageVersion = async ({ newVersion, pageId }) => {
+    const response = await notion.pages.update({
+        page_id: pageId,
+        properties: {
+            Status: {
+                status: {
+                    name: 'Done'
+                }
+            },
+            Release: {
+                select: {
+                    name: newVersion
+                }
+            }
+        }
+    });
+    return response.id;
+};
 
 /**
  * The main function for the action.
@@ -114194,11 +114231,15 @@ async function run() {
             doneTasks.push(`- [${id}](${url}): ${properties['Name'].title[0].text.content} by ${developers} (${properties['Category'].select.name})`);
         }
         const changelog = `## What's new \n ${doneTasks.join('\n')}`;
-        const newVersion = await createGithubRelease({
+        const { newVersion, releaseId } = await createGithubRelease({
             categories: tasksCategories,
             changeLog: changelog
         });
-        // Set outputs for other workflow steps to use
+        await updateNotionPageVersion({
+            newVersion,
+            pageId: response.results[0].id
+        });
+        await publishGithubRelease(releaseId);
         coreExports.setOutput('new-version', newVersion);
     }
     catch (error) {

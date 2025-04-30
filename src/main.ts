@@ -1,8 +1,12 @@
 import * as core from '@actions/core'
-import { createGithubRelease } from './lib/github.js'
-import { getDatabases, getTasksReadyForRelease } from './lib/notion.js'
+import { createGithubRelease, publishGithubRelease } from './lib/github.js'
+import {
+  getDatabases,
+  getTasksReadyForRelease,
+  updateNotionPageVersion
+} from './lib/notion.js'
 import { DatabaseObjectResponse } from '@notionhq/client/build/src/api-endpoints.js'
-import { PageProperties } from './type/notion.js'
+import { PageProperties } from './types/notion.js'
 
 type SearchResult = {
   title: { plain_text: string }[]
@@ -61,14 +65,18 @@ export async function run(): Promise<void> {
 
     const changelog = `## What's new \n ${doneTasks.join('\n')}`
 
-    const newVersion = await createGithubRelease({
+    const { newVersion, releaseId } = await createGithubRelease({
       categories: tasksCategories,
       changeLog: changelog
     })
 
-    // ToDo
-    // - Update in Notion the tasks and if its sucessful publish the release
-    // Set outputs for other workflow steps to use
+    await updateNotionPageVersion({
+      newVersion,
+      pageId: response.results[0].id
+    })
+
+    await publishGithubRelease(releaseId)
+
     core.setOutput('new-version', newVersion)
   } catch (error) {
     // Fail the workflow run if an error occurs

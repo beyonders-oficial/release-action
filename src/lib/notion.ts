@@ -83,3 +83,39 @@ export const getTasksReadyForRelease = async ({
     }
   })
 }
+
+type UpdatePageVersionParams = {
+  pageId: string
+  newVersion: string
+}
+/**
+ * Updates the version and status of a Notion page.
+ *
+ * @param {UpdatePageVersionParams} params - The parameters for updating the page.
+ * @param {string} params.newVersion - The new version to set in the "Release" property of the page.
+ * @param {string} params.pageId - The ID of the Notion page to update.
+ * @returns {Promise<string>} A promise that resolves to the ID of the updated page.
+ *
+ * @throws {Error} Throws an error if the Notion API request fails.
+ */
+export const updateNotionPageVersion = async ({
+  newVersion,
+  pageId
+}: UpdatePageVersionParams) => {
+  const response = await notion.pages.update({
+    page_id: pageId,
+    properties: {
+      Status: {
+        status: {
+          name: 'Done'
+        }
+      },
+      Release: {
+        select: {
+          name: newVersion
+        }
+      }
+    }
+  })
+  return response.id
+}

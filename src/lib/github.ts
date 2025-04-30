@@ -21,7 +21,7 @@ export const createGithubRelease = async ({
 
   const nextTag = autoDetectNextVersion(latestTag, categories)
 
-  await octokit.rest.repos.createRelease({
+  const release = await octokit.rest.repos.createRelease({
     owner,
     repo: repoName,
     tag_name: nextTag,
@@ -31,5 +31,16 @@ export const createGithubRelease = async ({
     prerelease: false
   })
 
-  return nextTag
+  return { newVersion: nextTag, releaseId: release.data.id }
+}
+
+export const publishGithubRelease = async (releaseId: number) => {
+  const [owner, repoName] = (REPOSITORY_NAME || '').split('/')
+
+  await octokit.rest.repos.updateRelease({
+    owner,
+    repo: repoName,
+    release_id: releaseId,
+    draft: false
+  })
 }

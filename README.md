@@ -1,7 +1,8 @@
-
 # 🚀 Beyonders Release GitHub Action
 
-**Beyonders Release** is a custom GitHub Action developed by [Beyonders Digital Solutions](https://beyonders.agency) to automate the release process of your projects by integrating GitHub and Notion.
+**Beyonders Release** is a custom GitHub Action developed by
+[Beyonders Digital Solutions](https://beyonders.agency) to automate the release
+process of your projects by integrating GitHub and Notion.
 
 ---
 
@@ -9,29 +10,31 @@
 
 Every time a new PR is merged into `main`, this action:
 
-1. **Creates a new Draft Release** on GitHub based on the tasks marked as "done" and "tested" in your Notion project board.
+1. **Creates a new Draft Release** on GitHub based on the tasks marked as "done"
+   and "tested" in your Notion project board.
 2. **Assigns a new semantic version** based on the merged work.
 3. **Updates those Notion tasks** to reflect the new version.
 4. **Publishes the release** on GitHub.
 
-This ensures a smooth, traceable, and automated flow from development to release — across both GitHub and Notion.
+This ensures a smooth, traceable, and automated flow from development to release
+— across both GitHub and Notion.
 
 ---
 
 ## ⚙️ Inputs
 
-| Name           | Required | Default       | Description                            |
-|----------------|----------|---------------|----------------------------------------|
-| `project`      | ✅       | `contractapp` | Name of the project.                   |
-| `repo-category`| ✅       | `Web`         | Category of the repository (e.g. Web, Backend, Mobile). |
+| Name            | Required | Default       | Description                                             |
+| --------------- | -------- | ------------- | ------------------------------------------------------- |
+| `project`       | ✅       | `contractapp` | Name of the project.                                    |
+| `repo-category` | ✅       | `Web`         | Category of the repository (e.g. Web, Backend, Mobile). |
 
 ---
 
 ## 🌱 Outputs
 
-| Name         | Description                          |
-|--------------|--------------------------------------|
-| `new-version`| The new semantic version created.    |
+| Name          | Description                       |
+| ------------- | --------------------------------- |
+| `new-version` | The new semantic version created. |
 
 ---
 
@@ -40,7 +43,8 @@ This ensures a smooth, traceable, and automated flow from development to release
 Make sure to provide the following secrets in your workflow or repository:
 
 - `NOTION_API_KEY`: Your Notion integration API key.
-- `GITHUB_TOKEN`: Automatically provided by GitHub Actions, used to create and publish releases.
+- `GITHUB_TOKEN`: Automatically provided by GitHub Actions, used to create and
+  publish releases.
 
 ---
 
@@ -88,15 +92,18 @@ uses: beyonders-oficial/release-action
 
 ## 📖 Notes
 
-- The action assumes your Notion database is well-organized and tasks have proper status metadata (e.g., "done", "tested").
-- The version is automatically generated based on the nature and count of completed tasks.
+- The action assumes your Notion database is well-organized and tasks have
+  proper status metadata (e.g., "done", "tested").
+- The version is automatically generated based on the nature and count of
+  completed tasks.
 - Ensure your Notion integration has access to the relevant database.
 
 ---
 
 ## 🧠 About Beyonders
 
-We're a global digital agency building products that stand out. Visit us at [beyonders.agency](https://beyonders.agency) for more!
+We're a global digital agency building products that stand out. Visit us at
+[beyonders.agency](https://beyonders.agency) for more!
 
 ---
 
@@ -105,6 +112,7 @@ We're a global digital agency building products that stand out. Visit us at [bey
 MIT License © Beyonders Digital Solutions
 
 ---
+
 ### Old ReadMe from Typescript Action Template
 
 [![GitHub Super-Linter](https://github.com/actions/typescript-action/actions/workflows/linter.yml/badge.svg)](https://github.com/super-linter/super-linter)

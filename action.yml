@@ -14,11 +14,11 @@ inputs:
   project:
     description: Name of the project
     required: true
-    default: contractapp
+    default: lup
   repo-category:
     description: Stack Category of the project (like Web, Backend, etc)
     required: true
-    default: Web
+    default: Backend
 
 # Define your outputs here.
 outputs:

@@ -7,6 +7,7 @@ import {
 } from './lib/notion.js'
 import { DatabaseObjectResponse } from '@notionhq/client/build/src/api-endpoints.js'
 import { PageProperties } from './types/notion.js'
+import { getGithubUserFromNotionUser } from './lib/map.js'
 
 type SearchResult = {
   title: { plain_text: string }[]
@@ -54,7 +55,7 @@ export async function run(): Promise<void> {
       const idObject = properties['ID'].unique_id
       const id = idObject.prefix + '-' + idObject.number
       const developers = properties['Assign'].people
-        .map((person) => person?.name)
+        .map((person) => '@' + getGithubUserFromNotionUser(person?.name))
         .join(', ')
 
       tasksCategories.push(properties['Category'].select?.name)
@@ -65,20 +66,21 @@ export async function run(): Promise<void> {
 
     const changelog = `## What's new \n ${doneTasks.join('\n')}`
 
-    const { newVersion, releaseId } = await createGithubRelease({
-      categories: tasksCategories,
-      changeLog: changelog
-    })
+    // const { newVersion, releaseId } = await createGithubRelease({
+    //   categories: tasksCategories,
+    //   changeLog: changelog
+    // })
 
-    for (const page of response.results)
-      await updateNotionPageVersion({
-        newVersion,
-        pageId: page.id
-      })
+    // for (const page of response.results)
+    //   await updateNotionPageVersion({
+    //     newVersion,
+    //     pageId: page.id
+    //   })
 
-    await publishGithubRelease(releaseId)
+    // await publishGithubRelease(releaseId)
 
-    core.setOutput('new-version', newVersion)
+    core.setOutput('new-version', changelog)
+    // core.setOutput('new-version', newVersion)
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)

@@ -114189,6 +114189,21 @@ const updateNotionPageVersion = async ({ newVersion, pageId }) => {
     return response.id;
 };
 
+const NOTION_TO_GITHUB_USERS = {
+    'Kaio Gabriel Souza Rozini': 'KaioGabrielSouzaRozini',
+    'Pedro Epifanio': 'pedroepif',
+    'Kelly Martina': 'kellymartina',
+    'Igor Benedet': 'IgorB20',
+    Lucas: 'lucas-oruncode',
+    Mathgobbo: 'Mathgobbo'
+};
+const getGithubUserFromNotionUser = (notionUser) => {
+    const user = NOTION_TO_GITHUB_USERS[notionUser];
+    if (!user)
+        return 'Unknown';
+    return user;
+};
+
 /**
  * The main function for the action.
  *
@@ -114225,7 +114240,7 @@ async function run() {
             const idObject = properties['ID'].unique_id;
             const id = idObject.prefix + '-' + idObject.number;
             const developers = properties['Assign'].people
-                .map((person) => person?.name)
+                .map((person) => '@' + getGithubUserFromNotionUser(person?.name))
                 .join(', ');
             tasksCategories.push(properties['Category'].select?.name);
             doneTasks.push(`- [${id}](${url}): ${properties['Name'].title[0].text.content} by ${developers} (${properties['Category'].select.name})`);
@@ -114242,6 +114257,7 @@ async function run() {
             });
         await publishGithubRelease(releaseId);
         coreExports.setOutput('new-version', newVersion);
+        // core.setOutput('new-version', newVersion)
     }
     catch (error) {
         // Fail the workflow run if an error occurs

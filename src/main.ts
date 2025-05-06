@@ -66,20 +66,20 @@ export async function run(): Promise<void> {
 
     const changelog = `## What's new \n ${doneTasks.join('\n')}`
 
-    // const { newVersion, releaseId } = await createGithubRelease({
-    //   categories: tasksCategories,
-    //   changeLog: changelog
-    // })
+    const { newVersion, releaseId } = await createGithubRelease({
+      categories: tasksCategories,
+      changeLog: changelog
+    })
 
-    // for (const page of response.results)
-    //   await updateNotionPageVersion({
-    //     newVersion,
-    //     pageId: page.id
-    //   })
+    for (const page of response.results)
+      await updateNotionPageVersion({
+        newVersion,
+        pageId: page.id
+      })
 
-    // await publishGithubRelease(releaseId)
+    await publishGithubRelease(releaseId)
 
-    core.setOutput('new-version', changelog)
+    core.setOutput('new-version', newVersion)
     // core.setOutput('new-version', newVersion)
   } catch (error) {
     // Fail the workflow run if an error occurs

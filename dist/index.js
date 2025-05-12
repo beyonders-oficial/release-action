@@ -31275,12 +31275,24 @@ function autoDetectNextVersion(latestTag, doneTasks) {
 const octokit = githubExports.getOctokit(GITHUB_TOKEN ?? '');
 const createGithubRelease = async ({ changeLog, categories }) => {
     const [owner, repoName] = (REPOSITORY_NAME || '').split('/');
-    const latestRelease = await octokit.rest.repos.getLatestRelease({
-        owner,
-        repo: repoName
-    });
-    const latestTag = latestRelease.data.tag_name;
-    const nextTag = autoDetectNextVersion(latestTag, categories);
+    let nextTag;
+    try {
+        const latestRelease = await octokit.rest.repos.getLatestRelease({
+            owner,
+            repo: repoName
+        });
+        const latestTag = latestRelease.data.tag_name;
+        nextTag = autoDetectNextVersion(latestTag, categories);
+    }
+    catch (error) {
+        if (error instanceof Error &&
+            error.name === 'HttpError' &&
+            error.status === 404) {
+            nextTag = '1.0.0';
+        }
+        else
+            throw error;
+    }
     const release = await octokit.rest.repos.createRelease({
         owner,
         repo: repoName,

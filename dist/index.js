@@ -31234,6 +31234,7 @@ process.env.OPEN_AI_API_KEY;
 const NOTION_API_KEY = process.env.NOTION_API_KEY;
 const REPOSITORY_NAME = process.env.GITHUB_REPOSITORY;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const NOTION_GITHUB_DATABASE_ID = '2428169c627680b8ae4bda00a5fc8d00';
 
 /**
  * Auto detects next version based on task labels.
@@ -31312,6 +31313,24 @@ const publishGithubRelease = async (releaseId) => {
         release_id: releaseId,
         draft: false
     });
+};
+const getRepoInfo = () => {
+    return githubExports.context.repo;
+};
+
+const NOTION_TO_GITHUB_USERS = {
+    'Kaio Gabriel Souza Rozini': 'KaioGabrielSouzaRozini',
+    'Pedro Epifanio': 'pedroepif',
+    'Kelly Martina': 'kellymartina',
+    'Igor Benedet': 'IgorB20',
+    Lucas: 'lucas-oruncode',
+    Mathgobbo: 'Mathgobbo'
+};
+const getGithubUserFromNotionUser = (notionUser) => {
+    const user = NOTION_TO_GITHUB_USERS[notionUser];
+    if (!user)
+        return 'Unknown';
+    return user;
 };
 
 var src = {};
@@ -114099,28 +114118,20 @@ function requireSrc () {
 var srcExports = requireSrc();
 
 const notion = new srcExports.Client({ auth: NOTION_API_KEY });
-const getDatabases = async () => {
-    return await notion.search({
-        filter: {
-            value: 'database',
-            property: 'object'
-        }
-    });
-};
 /**
  * Retrieves tasks from a Notion database that are ready for release.
  *
  * The function queries the specified Notion database and filters tasks based on the following criteria:
  * - The "Status" property must be set to "Staging".
  * - The "Test status" property must be either "Testado" or "Tested".
- * - The "Project" property must contain the specified repository name (`repo`) or its lowercase equivalent.
+ * - The "Repository" property must contain the specified repository name
  *
  * @async
  * @function getTasksReadyForRelease
  * @returns {Promise<Object>} A promise that resolves to the query result containing tasks ready for release.
  * @throws {Error} Throws an error if the Notion API query fails.
  */
-const getTasksReadyForRelease = async ({ databaseId, repoCategory }) => {
+const getTasksReadyForRelease = async ({ databaseId, repository }) => {
     return await notion.databases.query({
         database_id: databaseId,
         filter: {
@@ -114151,22 +114162,10 @@ const getTasksReadyForRelease = async ({ databaseId, repoCategory }) => {
                     ]
                 },
                 {
-                    or: [
-                        {
-                            property: 'Project',
-                            type: 'multi_select',
-                            multi_select: {
-                                contains: repoCategory
-                            }
-                        },
-                        {
-                            property: 'Project',
-                            type: 'multi_select',
-                            multi_select: {
-                                contains: repoCategory.toLowerCase()
-                            }
-                        }
-                    ]
+                    property: 'Repository',
+                    select: {
+                        equals: repository
+                    }
                 }
             ]
         }
@@ -114200,20 +114199,51 @@ const updateNotionPageVersion = async ({ newVersion, pageId }) => {
     });
     return response.id;
 };
-
-const NOTION_TO_GITHUB_USERS = {
-    'Kaio Gabriel Souza Rozini': 'KaioGabrielSouzaRozini',
-    'Pedro Epifanio': 'pedroepif',
-    'Kelly Martina': 'kellymartina',
-    'Igor Benedet': 'IgorB20',
-    Lucas: 'lucas-oruncode',
-    Mathgobbo: 'Mathgobbo'
-};
-const getGithubUserFromNotionUser = (notionUser) => {
-    const user = NOTION_TO_GITHUB_USERS[notionUser];
-    if (!user)
-        return 'Unknown';
-    return user;
+/**
+ * This function makes a query to one of our Notion databases that store
+ * our projects details, like:
+ * - Name
+ * - Github Repository
+ * - Github Owner
+ * - Notion Kanbam Database ID
+ *
+ * @param params {Object} optional params to filter the database
+ * @returns NotionDatabaseRow
+ */
+const getProjectsInformation = async (params) => {
+    const queryArgs = {
+        database_id: NOTION_GITHUB_DATABASE_ID // Constant Database ID
+    };
+    const data = await notion.databases.query(queryArgs);
+    return data.results
+        .filter((r) => r.object === 'page')
+        .map((result) => {
+        const row = {};
+        if ('properties' in result && result.properties) {
+            const keys = Object.keys(result.properties);
+            for (const key of keys) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const property = result.properties[key];
+                if (property?.rich_text &&
+                    property.rich_text.length > 0 &&
+                    property.rich_text[0]?.text?.content) {
+                    row[key] = property.rich_text[0].text.content;
+                }
+                else if (property?.type === 'select' && !!property?.select?.name) {
+                    row[key] = property.select.name;
+                }
+                else if (property?.title &&
+                    property.title.length > 0 &&
+                    property?.title[0]?.plain_text) {
+                    row[key] = property?.title[0]?.plain_text;
+                }
+                else {
+                    row[key] = '';
+                }
+            }
+        }
+        return row;
+    });
 };
 
 /**
@@ -114223,22 +114253,21 @@ const getGithubUserFromNotionUser = (notionUser) => {
  */
 async function run() {
     try {
-        const project = coreExports.getInput('project');
-        const repoCategory = coreExports.getInput('repo-category');
-        const databases = await getDatabases();
-        const selectedDatabase = databases.results.find((db) => db.object === 'database' &&
-            typeof db.title[0].plain_text === 'string' &&
-            db.title[0].plain_text
-                .toLowerCase()
-                .indexOf('tasks') > -1 &&
-            db.title[0].plain_text
-                .toLowerCase()
-                .indexOf(project) > -1);
+        const repoInfo = getRepoInfo();
+        const projectsInfo = await getProjectsInformation();
+        const selectedProject = projectsInfo.find((row) => row['Github Owner'] == repoInfo.owner &&
+            row['Github Repo'] == repoInfo.repo);
+        if (!selectedProject)
+            throw new Error('Project and/or repo not Notion-Github Database yet');
+        const selectedDatabase = selectedProject['Database Notion ID'];
         if (!selectedDatabase)
-            throw new Error('Database not found');
+            throw new Error('Notion Database for this project not found');
+        const selectedTitle = selectedProject['Title'];
+        if (!selectedTitle)
+            throw new Error('Title not found');
         const response = await getTasksReadyForRelease({
-            databaseId: selectedDatabase.id,
-            repoCategory
+            databaseId: selectedDatabase,
+            repository: repoInfo.repo
         });
         if (!response.results.length)
             throw new Error('No Tasks found.');
@@ -114269,7 +114298,6 @@ async function run() {
             });
         await publishGithubRelease(releaseId);
         coreExports.setOutput('new-version', newVersion);
-        // core.setOutput('new-version', newVersion)
     }
     catch (error) {
         // Fail the workflow run if an error occurs

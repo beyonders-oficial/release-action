@@ -19,7 +19,6 @@ Every time a new PR is merged into `main`, this action:
 This ensures a smooth, traceable, and automated flow from development to release
 — across both GitHub and Notion.
 
-
 ## 🌱 Outputs
 
 | Name          | Description                       |

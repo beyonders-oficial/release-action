@@ -1,4 +1,4 @@
-import { getOctokit } from '@actions/github'
+import { context, getOctokit } from '@actions/github'
 import { GITHUB_TOKEN, REPOSITORY_NAME } from '../config/constants.js'
 import { autoDetectNextVersion } from './semver.js'
 
@@ -61,4 +61,8 @@ export const publishGithubRelease = async (releaseId: number) => {
     release_id: releaseId,
     draft: false
   })
+}
+
+export const getRepoInfo = () => {
+  return context.repo
 }

@@ -1,17 +1,17 @@
 import * as core from '@actions/core'
-import { createGithubRelease, publishGithubRelease } from './lib/github.js'
+import { DatabaseObjectResponse } from '@notionhq/client/build/src/api-endpoints.js'
 import {
-  getDatabases,
+  createGithubRelease,
+  getRepoInfo,
+  publishGithubRelease
+} from './lib/github.js'
+import { getGithubUserFromNotionUser } from './lib/map.js'
+import {
+  getProjectsInformation,
   getTasksReadyForRelease,
   updateNotionPageVersion
 } from './lib/notion.js'
-import { DatabaseObjectResponse } from '@notionhq/client/build/src/api-endpoints.js'
 import { PageProperties } from './types/notion.js'
-import { getGithubUserFromNotionUser } from './lib/map.js'
-
-type SearchResult = {
-  title: { plain_text: string }[]
-}
 
 /**
  * The main function for the action.
@@ -20,26 +20,27 @@ type SearchResult = {
  */
 export async function run(): Promise<void> {
   try {
-    const project = core.getInput('project')
-    const repoCategory = core.getInput('repo-category')
-    const databases = await getDatabases()
+    const repoInfo = getRepoInfo()
+    const projectsInfo = await getProjectsInformation()
 
-    const selectedDatabase = databases.results.find(
-      (db) =>
-        db.object === 'database' &&
-        typeof (db as SearchResult).title[0].plain_text === 'string' &&
-        (db as SearchResult).title[0].plain_text
-          .toLowerCase()
-          .indexOf('tasks') > -1 &&
-        (db as SearchResult).title[0].plain_text
-          .toLowerCase()
-          .indexOf(project) > -1
+    const selectedProject = projectsInfo.find(
+      (row) =>
+        row['Github Owner'] == repoInfo.owner &&
+        row['Github Repo'] == repoInfo.repo
     )
-    if (!selectedDatabase) throw new Error('Database not found')
+    if (!selectedProject)
+      throw new Error('Project and/or repo not Notion-Github Database yet')
+
+    const selectedDatabase = selectedProject['Database Notion ID']
+    if (!selectedDatabase)
+      throw new Error('Notion Database for this project not found')
+
+    const selectedTitle = selectedProject['Title']
+    if (!selectedTitle) throw new Error('Title not found')
 
     const response = await getTasksReadyForRelease({
-      databaseId: selectedDatabase.id,
-      repoCategory
+      databaseId: selectedDatabase,
+      repository: repoInfo.repo
     })
 
     if (!response.results.length) throw new Error('No Tasks found.')
@@ -80,7 +81,6 @@ export async function run(): Promise<void> {
     await publishGithubRelease(releaseId)
 
     core.setOutput('new-version', newVersion)
-    // core.setOutput('new-version', newVersion)
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)

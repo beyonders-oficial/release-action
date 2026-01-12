@@ -9,17 +9,6 @@ branding:
   icon: aperture
   color: green
 
-# Define your inputs here.
-inputs:
-  project:
-    description: Name of the project
-    required: true
-    default: lup
-  repo-category:
-    description: Stack Category of the project (like Web, Backend, etc)
-    required: true
-    default: Backend
-
 # Define your outputs here.
 outputs:
   new-version:

@@ -19,16 +19,6 @@ Every time a new PR is merged into `main`, this action:
 This ensures a smooth, traceable, and automated flow from development to release
 — across both GitHub and Notion.
 
----
-
-## ⚙️ Inputs
-
-| Name            | Required | Default       | Description                                             |
-| --------------- | -------- | ------------- | ------------------------------------------------------- |
-| `project`       | ✅       | `contractapp` | Name of the project.                                    |
-| `repo-category` | ✅       | `Web`         | Category of the repository (e.g. Web, Backend, Mobile). |
-
----
 
 ## 🌱 Outputs
 
@@ -70,9 +60,6 @@ jobs:
 
       - name: Run Beyonders Release Action
         uses: beyonders-oficial/release-action
-        with:
-          project: contractapp
-          repo-category: Web
         env:
           NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -61,7 +61,7 @@ export async function run(): Promise<void> {
 
       tasksCategories.push(properties['Category'].select?.name)
       doneTasks.push(
-        `- [${id}](${url}): ${properties['Name'].title[0].text.content || "Unknow property name"} by ${developers} (${properties['Category'].select?.name || 'Unknown property category'})`
+        `- [${id}](${url}): ${properties['Name'].title[0].text.content || 'Unknow property name'} by ${developers} (${properties['Category'].select?.name || 'Unknown property category'})`
       )
     }
 

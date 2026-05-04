@@ -114258,7 +114258,16 @@ async function createReleasePage({ release, project, releaseUrl }) {
         throw new Error('project is required.');
     }
     const properties = {
-        Release: {
+        ['Release Title']: {
+            title: [
+                {
+                    text: {
+                        content: `Release ${release} - ${project}`
+                    }
+                }
+            ]
+        },
+        ['Release Tag']: {
             select: {
                 name: release
             }

@@ -218,7 +218,16 @@ export async function createReleasePage({
   }
 
   const properties: CreatePageParameters['properties'] = {
-    Release: {
+    ['Release Title']: {
+      title: [
+        {
+          text: {
+            content: `Release ${release} - ${project}`
+          }
+        }
+      ]
+    },
+    ['Release Tag']: {
       select: {
         name: release
       }

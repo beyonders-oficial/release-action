@@ -55,12 +55,14 @@ export const createGithubRelease = async ({
 export const publishGithubRelease = async (releaseId: number) => {
   const [owner, repoName] = (REPOSITORY_NAME || '').split('/')
 
-  await octokit.rest.repos.updateRelease({
+  const { data } = await octokit.rest.repos.updateRelease({
     owner,
     repo: repoName,
     release_id: releaseId,
     draft: false
   })
+
+  return data.html_url
 }
 
 export const getRepoInfo = () => {

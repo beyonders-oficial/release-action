@@ -3,7 +3,10 @@ import {
   NOTION_API_KEY,
   NOTION_GITHUB_DATABASE_ID
 } from '../config/constants.js'
-import { QueryDatabaseParameters } from '@notionhq/client/build/src/api-endpoints.js'
+import {
+  CreatePageParameters,
+  QueryDatabaseParameters
+} from '@notionhq/client/build/src/api-endpoints.js'
 
 const notion = new Client({ auth: NOTION_API_KEY })
 
@@ -184,4 +187,60 @@ export const getProjectsInformation = async (params?: {
       }
       return row
     })
+}
+
+type CreateReleasePageParams = {
+  release: string
+  project: string
+  releaseUrl?: string
+}
+
+export async function createReleasePage({
+  release,
+  project,
+  releaseUrl
+}: CreateReleasePageParams) {
+  if (!process.env.NOTION_API_KEY) {
+    throw new Error('Missing NOTION_API_KEY environment variable.')
+  }
+
+  if (!process.env.PRODUCT_RELEASE_DATABASE_ID) {
+    throw new Error('Missing PRODUCT_RELEASE_DATABASE_ID environment variable.')
+  }
+
+  if (!release) {
+    throw new Error('release is required.')
+  }
+
+  if (!project) {
+    throw new Error('project is required.')
+  }
+
+  const properties: CreatePageParameters['properties'] = {
+    Release: {
+      select: {
+        name: release
+      }
+    },
+    Project: {
+      select: {
+        name: project
+      }
+    }
+  }
+
+  if (releaseUrl) {
+    properties['Release URL'] = {
+      url: releaseUrl
+    }
+  }
+
+  const page = await notion.pages.create({
+    parent: {
+      database_id: process.env.PRODUCT_RELEASE_DATABASE_ID
+    },
+    properties
+  })
+
+  return page
 }

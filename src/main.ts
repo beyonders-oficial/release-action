@@ -7,6 +7,7 @@ import {
 } from './lib/github.js'
 import { getGithubUserFromNotionUser } from './lib/map.js'
 import {
+  createReleasePage,
   getProjectsInformation,
   getTasksReadyForRelease,
   updateNotionPageVersion
@@ -67,18 +68,28 @@ export async function run(): Promise<void> {
 
     const changelog = `## What's new \n ${doneTasks.join('\n')}`
 
+    //Github Release
     const { newVersion, releaseId } = await createGithubRelease({
       categories: tasksCategories,
       changeLog: changelog
     })
 
+    const githubReleaseUrl = await publishGithubRelease(releaseId)
+
+    //Notion Release
     for (const page of response.results)
       await updateNotionPageVersion({
         newVersion,
         pageId: page.id
       })
 
-    await publishGithubRelease(releaseId)
+    await createReleasePage({
+      release: newVersion,
+      project: selectedTitle,
+      releaseUrl: githubReleaseUrl
+    })
+
+    //todo adicionar link de página de release do github
 
     core.setOutput('new-version', newVersion)
   } catch (error) {

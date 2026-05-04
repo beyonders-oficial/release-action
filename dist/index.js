@@ -31307,12 +31307,13 @@ const createGithubRelease = async ({ changeLog, categories }) => {
 };
 const publishGithubRelease = async (releaseId) => {
     const [owner, repoName] = (REPOSITORY_NAME || '').split('/');
-    await octokit.rest.repos.updateRelease({
+    const { data } = await octokit.rest.repos.updateRelease({
         owner,
         repo: repoName,
         release_id: releaseId,
         draft: false
     });
+    return data.html_url;
 };
 const getRepoInfo = () => {
     return githubExports.context.repo;
@@ -114245,6 +114246,44 @@ const getProjectsInformation = async (params) => {
         return row;
     });
 };
+async function createReleasePage({ release, project, releaseUrl }) {
+    if (!process.env.NOTION_API_KEY) {
+        throw new Error('Missing NOTION_API_KEY environment variable.');
+    }
+    if (!process.env.PRODUCT_RELEASE_DATABASE_ID) {
+        throw new Error('Missing PRODUCT_RELEASE_DATABASE_ID environment variable.');
+    }
+    if (!release) {
+        throw new Error('release is required.');
+    }
+    if (!project) {
+        throw new Error('project is required.');
+    }
+    const properties = {
+        Release: {
+            select: {
+                name: release
+            }
+        },
+        Project: {
+            select: {
+                name: project
+            }
+        }
+    };
+    if (releaseUrl) {
+        properties['Release URL'] = {
+            url: releaseUrl
+        };
+    }
+    const page = await notion.pages.create({
+        parent: {
+            database_id: process.env.PRODUCT_RELEASE_DATABASE_ID
+        },
+        properties
+    });
+    return page;
+}
 
 /**
  * The main function for the action.
@@ -114284,19 +114323,27 @@ async function run() {
                 .map((person) => '@' + getGithubUserFromNotionUser(person?.name))
                 .join(', ');
             tasksCategories.push(properties['Category'].select?.name);
-            doneTasks.push(`- [${id}](${url}): ${properties['Name'].title[0].text.content || 'Unknow property name'} by ${developers} (${properties['Category'].select?.name || 'Unknown property category'})`);
+            doneTasks.push(`- [${id}](${url}): ${properties['Name'].title[0].text.content} by ${developers} (${properties['Category'].select.name})`);
         }
         const changelog = `## What's new \n ${doneTasks.join('\n')}`;
+        //Github Release
         const { newVersion, releaseId } = await createGithubRelease({
             categories: tasksCategories,
             changeLog: changelog
         });
+        const githubReleaseUrl = await publishGithubRelease(releaseId);
+        //Notion Release
         for (const page of response.results)
             await updateNotionPageVersion({
                 newVersion,
                 pageId: page.id
             });
-        await publishGithubRelease(releaseId);
+        await createReleasePage({
+            release: newVersion,
+            project: selectedTitle,
+            releaseUrl: githubReleaseUrl
+        });
+        //todo adicionar link de página de release do github
         coreExports.setOutput('new-version', newVersion);
     }
     catch (error) {

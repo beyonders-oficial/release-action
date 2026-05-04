@@ -31235,6 +31235,7 @@ const NOTION_API_KEY = process.env.NOTION_API_KEY;
 const REPOSITORY_NAME = process.env.GITHUB_REPOSITORY;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const NOTION_GITHUB_DATABASE_ID = '2428169c627680b8ae4bda00a5fc8d00';
+const PRODUCT_RELEASE_DATABASE_ID = '3568169c6276802b9152d024ca40c26a';
 
 /**
  * Auto detects next version based on task labels.
@@ -114247,11 +114248,8 @@ const getProjectsInformation = async (params) => {
     });
 };
 async function createReleasePage({ release, project, releaseUrl }) {
-    if (!process.env.NOTION_API_KEY) {
+    if (!NOTION_API_KEY) {
         throw new Error('Missing NOTION_API_KEY environment variable.');
-    }
-    if (!process.env.PRODUCT_RELEASE_DATABASE_ID) {
-        throw new Error('Missing PRODUCT_RELEASE_DATABASE_ID environment variable.');
     }
     if (!release) {
         throw new Error('release is required.');
@@ -114278,7 +114276,7 @@ async function createReleasePage({ release, project, releaseUrl }) {
     }
     const page = await notion.pages.create({
         parent: {
-            database_id: process.env.PRODUCT_RELEASE_DATABASE_ID
+            database_id: PRODUCT_RELEASE_DATABASE_ID
         },
         properties
     });

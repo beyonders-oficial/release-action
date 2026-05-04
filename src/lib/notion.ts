@@ -1,7 +1,8 @@
 import { Client } from '@notionhq/client'
 import {
   NOTION_API_KEY,
-  NOTION_GITHUB_DATABASE_ID
+  NOTION_GITHUB_DATABASE_ID,
+  PRODUCT_RELEASE_DATABASE_ID
 } from '../config/constants.js'
 import {
   CreatePageParameters,
@@ -200,11 +201,11 @@ export async function createReleasePage({
   project,
   releaseUrl
 }: CreateReleasePageParams) {
-  if (!process.env.NOTION_API_KEY) {
+  if (!NOTION_API_KEY) {
     throw new Error('Missing NOTION_API_KEY environment variable.')
   }
 
-  if (!process.env.PRODUCT_RELEASE_DATABASE_ID) {
+  if (!PRODUCT_RELEASE_DATABASE_ID) {
     throw new Error('Missing PRODUCT_RELEASE_DATABASE_ID environment variable.')
   }
 
@@ -237,7 +238,7 @@ export async function createReleasePage({
 
   const page = await notion.pages.create({
     parent: {
-      database_id: process.env.PRODUCT_RELEASE_DATABASE_ID
+      database_id: PRODUCT_RELEASE_DATABASE_ID
     },
     properties
   })

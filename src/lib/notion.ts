@@ -194,12 +194,14 @@ type CreateReleasePageParams = {
   release: string
   project: string
   releaseUrl?: string
+  repositoryName: string
 }
 
 export async function createReleasePage({
   release,
   project,
-  releaseUrl
+  releaseUrl,
+  repositoryName
 }: CreateReleasePageParams) {
   if (!NOTION_API_KEY) {
     throw new Error('Missing NOTION_API_KEY environment variable.')
@@ -235,6 +237,11 @@ export async function createReleasePage({
     Project: {
       select: {
         name: project
+      }
+    },
+    Repository: {
+      select: {
+        name: repositoryName
       }
     }
   }

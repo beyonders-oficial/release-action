@@ -86,7 +86,8 @@ export async function run(): Promise<void> {
     await createReleasePage({
       release: newVersion,
       project: selectedTitle,
-      releaseUrl: githubReleaseUrl
+      releaseUrl: githubReleaseUrl,
+      repositoryName: repoInfo.repo
     })
 
     //todo adicionar link de página de release do github

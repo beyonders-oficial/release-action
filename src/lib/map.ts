@@ -4,7 +4,8 @@ const NOTION_TO_GITHUB_USERS: { [name: string]: string } = {
   'Kelly Martina': 'kellymartina',
   'Igor Benedet': 'IgorB20',
   Lucas: 'lucas-oruncode',
-  Mathgobbo: 'Mathgobbo'
+  Mathgobbo: 'Mathgobbo',
+  'José Luis': 'Tuskon'
 }
 
 export const getGithubUserFromNotionUser = (notionUser: string) => {

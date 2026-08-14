@@ -31347,7 +31347,8 @@ const NOTION_TO_GITHUB_USERS = {
     'Kelly Martina': 'kellymartina',
     'Igor Benedet': 'IgorB20',
     Lucas: 'lucas-oruncode',
-    Mathgobbo: 'Mathgobbo'
+    Mathgobbo: 'Mathgobbo',
+    'José Luiz': 'Tuskon'
 };
 const getGithubUserFromNotionUser = (notionUser) => {
     const user = NOTION_TO_GITHUB_USERS[notionUser];
